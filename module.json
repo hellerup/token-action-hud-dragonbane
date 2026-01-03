@@ -28,6 +28,11 @@
       "lang": "sv",
       "name": "Svenska",
       "path": "languages/sv.json"
+    },
+    {
+      "lang": "it",
+      "name": "Italiano",
+      "path": "languages/it.json"
     }
   ],
   "packs": [],
@@ -39,7 +44,7 @@
         "compatibility": [
           {
             "minimum": "2.0",
-            "verified": "2.6"
+            "verified": "3.0"
           }
         ]
       }
