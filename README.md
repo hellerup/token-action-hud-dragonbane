@@ -256,6 +256,7 @@ await yourCustomRollFunction();
 ### **Community Contributors**
 
 - **xdy** - Swedish language improvements and localization fixes
+- **LuckyFrico** - Italian language localization
 - **Free League Publishing** - Excellent Dragonbane RPG system
 - **Token Action HUD Core team** - Foundational framework
 - **Foundry VTT community** - Feedback and support
@@ -275,7 +276,7 @@ await yourCustomRollFunction();
 
 ## ⚖️ **License & Disclaimer**
 
-MIT License. 
+MIT License.
 
 This VTT module is not affiliated with, sponsored, or endorsed by Fria Ligan AB. This Supplement was created under Fria Ligan AB’s [Dragonbane Third Party Supplement License](https://freeleaguepublishing.com/wp-content/uploads/2023/11/Dragonbane-License-Agreement.pdf).
 

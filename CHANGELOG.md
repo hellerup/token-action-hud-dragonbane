@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.4.2] - 2025-01-02
+
+### 🌍 Localization Improvements
+
+#### 🇮🇹 Italian Language Support
+
+- **Italian Localization**: Complete Italian translation now available (contribution by **LuckyFrico**)
+- **Full Coverage**: All settings, actions, combat rules, journey actions, and UI elements fully translated
+
+---
+
 ## [2.4.1] - 2025-12-26
 
 ### 🐛 **Critical Bug Fixes**
