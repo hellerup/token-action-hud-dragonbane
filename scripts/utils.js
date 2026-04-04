@@ -32,7 +32,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
 
       // Map each attribute to its localized condition name
       for (const [attributeKey, conditionData] of Object.entries(
-        conditionEffects
+        conditionEffects,
       )) {
         if (conditionData?.label) {
           const localizedName = game.i18n.localize(conditionData.label);
@@ -80,7 +80,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
     static getLocalizedSkillName(skillKey) {
       return (
         coreModule.api.Utils.i18n(
-          `tokenActionHud.dragonbane.skillNames.${skillKey}`
+          `tokenActionHud.dragonbane.skillNames.${skillKey}`,
         ) || skillKey
       );
     }
@@ -93,7 +93,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
     static getLocalizedAttributeAbbreviation(attributeKey) {
       return (
         coreModule.api.Utils.i18n(
-          `tokenActionHud.dragonbane.attributeAbbreviations.${attributeKey}`
+          `tokenActionHud.dragonbane.attributeAbbreviations.${attributeKey}`,
         ) || attributeKey.toUpperCase()
       );
     }
@@ -139,7 +139,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
                     current,
                     max,
                     damage,
-                  }
+                  },
                 ) ||
                 `<strong>${actorName}</strong> has ${current}/${max} HP (${damage} damage taken).`;
             } else {
@@ -150,7 +150,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
                     name: actorName,
                     current,
                     max,
-                  }
+                  },
                 ) || `<strong>${actorName}</strong> has ${current}/${max} HP.`;
             }
             break;
@@ -171,7 +171,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
                     current,
                     max,
                     spent,
-                  }
+                  },
                 ) ||
                 `<strong>${actorName}</strong> has ${current}/${max} WP (${spent} WP spent).`;
             } else {
@@ -182,7 +182,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
                     name: actorName,
                     current,
                     max,
-                  }
+                  },
                 ) || `<strong>${actorName}</strong> has ${current}/${max} WP.`;
             }
             break;
@@ -196,7 +196,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
                 {
                   name: actorName,
                   movement,
-                }
+                },
               ) ||
               `<strong>${actorName}</strong> has a Movement of ${movement}.`;
             break;
@@ -215,14 +215,14 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
                   name: actorName,
                   current,
                   max,
-                }
+                },
               ) ||
               `<strong>${actorName}</strong> is carrying ${current}/${max} items.`;
 
             if (overEncumbered) {
               const overNote =
                 game.i18n.localize(
-                  "tokenActionHud.dragonbane.chat.stats.overEncumbered"
+                  "tokenActionHud.dragonbane.chat.stats.overEncumbered",
                 ) || "Over-encumbered!";
               content = `${baseContent} <em>${overNote}</em>`;
             } else {
@@ -240,7 +240,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
                 {
                   name: actorName,
                   ferocity,
-                }
+                },
               ) ||
               `<strong>${actorName}</strong> has a Ferocity of ${ferocity}.`;
             break;
@@ -263,7 +263,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
       } catch (error) {
         console.error(
           "Token Action HUD Dragonbane: Error creating stats chat message:",
-          error
+          error,
         );
         ui.notifications.error(`Failed to display ${statType} information`);
         return null;
@@ -302,7 +302,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
             content =
               game.i18n.format(
                 "tokenActionHud.dragonbane.chat.currency.silver",
-                { name: actorName, amount: silver }
+                { name: actorName, amount: silver },
               ) || `<strong>${actorName}</strong> has ${silver} silver.`;
             break;
           }
@@ -312,7 +312,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
             content =
               game.i18n.format(
                 "tokenActionHud.dragonbane.chat.currency.copper",
-                { name: actorName, amount: copper }
+                { name: actorName, amount: copper },
               ) || `<strong>${actorName}</strong> has ${copper} copper.`;
             break;
           }
@@ -330,7 +330,7 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
       } catch (error) {
         console.error(
           "Token Action HUD Dragonbane: Error creating currency chat message:",
-          error
+          error,
         );
         return null;
       }
@@ -476,11 +476,14 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
     }
 
     /**
-     * Parse monster attack name from table result description
-     * @param {object} tableResult The attack table result
-     * @returns {object} Object with attackName and cleanDescription
+     * Parse monster attack name from table result description.
+     * Mirrors the system's own priority: result.name first, then <strong>/<b>
+     * tag in description, then "Attack N" as final fallback.
+     * @param {object} tableResult  The attack table result
+     * @param {object} [attackTable] The parent table (used to strip auto-generated name prefix)
+     * @returns {object} { attackName, cleanDescription }
      */
-    static parseMonsterAttackName(tableResult) {
+    static parseMonsterAttackName(tableResult, attackTable = null) {
       if (!tableResult)
         return { attackName: "Unknown Attack", cleanDescription: "" };
 
@@ -492,21 +495,30 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
         attackDescription = tableResult.text || "";
       }
 
-      // Default attack name
-      let attackName = `Attack ${tableResult.range[0]}`;
-
-      // Parse the attack name from bold tags in description
-      const match = attackDescription.match(/<(b|strong)>(.*?)<\/\1>/);
-      if (match) {
-        attackName = match[2];
-        // Remove the bold tag from description for clean display
-        attackDescription = attackDescription
-          .replace(/<(b|strong)>.*?<\/\1>/, "")
-          .trim();
+      // Priority 1: use result.name if present (system 3.1.0+)
+      if (tableResult.name) {
+        const prefix = attackTable ? `${attackTable.name} - ` : null;
+        const attackName =
+          prefix && tableResult.name.startsWith(prefix)
+            ? tableResult.name.substring(prefix.length)
+            : tableResult.name;
+        // Description is shown as-is; no bold tag to strip when name is explicit
+        return { attackName, cleanDescription: attackDescription };
       }
 
+      // Priority 2: parse <strong>/<b> tag from description (legacy tables)
+      const match = attackDescription.match(/<(b|strong)>(.*?)<\/\1>/);
+      if (match) {
+        const attackName = match[2];
+        const cleanDescription = attackDescription
+          .replace(/<(b|strong)>.*?<\/\1>/, "")
+          .trim();
+        return { attackName, cleanDescription };
+      }
+
+      // Priority 3: fallback
       return {
-        attackName,
+        attackName: `Attack ${tableResult.range[0]}`,
         cleanDescription: attackDescription,
       };
     }
@@ -521,10 +533,12 @@ Hooks.once("tokenActionHudCoreApiReady", async (coreModule) => {
     static createMonsterAttackChatContent(
       tableResult,
       attackTable,
-      roll = null
+      roll = null,
     ) {
-      const { attackName, cleanDescription } =
-        this.parseMonsterAttackName(tableResult);
+      const { attackName, cleanDescription } = this.parseMonsterAttackName(
+        tableResult,
+        attackTable,
+      );
 
       let content = `<div class="dice-roll" data-action="expandRoll">
     <div class="dice-result">

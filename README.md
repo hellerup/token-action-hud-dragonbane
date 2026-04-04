@@ -88,6 +88,10 @@ https://github.com/kergalli/token-action-hud-dragonbane/releases/latest/download
 
 ### 💤 **Advanced Rest System**
 
+- **Rest Dialog Support**: Stretch Rest and Shift Rest open the system's rest dialog, matching character sheet behaviour
+  - Stretch Rest dialog allows adjusting HP dice, WP dice, and conditions to recover
+  - Both dialogs support the **Interrupt** option to spend the rest without recovering
+  - Fully respects the system's **Rest Dialogs** setting and Shift/Ctrl modifier to skip
 - **Rest Availability Tracking**: Visual indicators for available rest types
 - **Complete Rest Options**: Round Rest, Stretch Rest, Shift Rest, Pass One Shift
 - **Usage Prevention**: Disabled styling and messages for already-used rests
@@ -207,6 +211,14 @@ When using **Dragonbane Combat Assistant v2.2.3+**, these utility rolls are **au
 
 ## 📝 **Recent Updates**
 
+### **v2.5.0 - Dragonbane v3.1.5 Compatibility** ⭐
+
+- **Rest Dialogs**: Stretch Rest and Shift Rest now open the system's rest dialogs from the HUD, with full Interrupt support and respect for the system's dialog behaviour setting
+- **Monster Attack Names**: Fixed attack name resolution to match the system's v3.1.0 priority order (`result.name` → bold tag → fallback)
+- **Verified**: Confirmed compatible with Dragonbane system v3.1.5
+
+### **Previous Major Updates**
+
 ### **v2.4.1 - YZE Combat Integration Fixes** ⭐
 
 - **Fixed Action Counting**: Fear Tests, Light Tests, Death Rolls, Severe Injury Tests properly excluded
@@ -237,7 +249,7 @@ Token Action HUD Dragonbane provides an extensible ignore flag system:
 await game.user.setFlag(
   "token-action-hud-dragonbane",
   "ignoreNextRollForActionCounting",
-  true
+  true,
 );
 await yourCustomRollFunction();
 // Dragonbane Combat Assistant automatically respects this flag

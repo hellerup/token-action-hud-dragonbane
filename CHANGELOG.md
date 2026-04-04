@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.5.0] - 2025-04-04
+
+### ✨ New Features
+
+#### 💤 Rest Dialog Integration
+
+- **Stretch Rest dialog**: Clicking Stretch Rest from the HUD now opens the system's rest dialog, matching the behaviour of the character sheet button. The dialog allows adjusting the amount of HP, WP, and conditions to recover, and offers an **Interrupt** option to spend the rest without recovering
+- **Shift Rest dialog**: Clicking Shift Rest from the HUD now opens the system's rest dialog with **Finish** and **Interrupt** options, again matching the character sheet
+- **Respects system setting**: Both dialogs honour the core Dragonbane **Rest Dialogs** setting (`restDialogIsDefault`). When the setting is enabled, the dialog opens on left-click and is skipped when holding Shift or Ctrl. When disabled, the behaviour is reversed — matching exactly what the character sheet does
+- **All dialog strings localized**: Dialog titles, buttons, and interrupted messages use the system's own localization keys and are automatically correct in all languages the system supports
+
+### 🐛 Bug Fixes
+
+#### 👹 Monster Attack Name Resolution
+
+- **Fixed monster attack names** not reflecting the system's updated naming logic introduced in Dragonbane v3.1.0. Attack names are now resolved using the table result's `name` field first (stripping the auto-generated `"TableName - "` prefix where present), falling back to bold-tag parsing for legacy tables, and finally to `"Attack N"` as a last resort — matching the system's own priority order
+
+### 🔧 Compatibility
+
+- **Verified compatibility** with Dragonbane system v3.1.5
+
+---
+
 ## [2.4.2] - 2025-01-02
 
 ### 🌍 Localization Improvements

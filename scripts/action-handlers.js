@@ -41,7 +41,7 @@ export function createActionHandlers(coreModule) {
       if (actor.type !== "npc" && actor.type !== "monster") {
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.traits.onlyForNpcsMonsters"
+            "tokenActionHud.dragonbane.messages.traits.onlyForNpcsMonsters",
           ) || "Traits are only available for NPCs and Monsters";
         ui.notifications.warn(message);
         return;
@@ -52,7 +52,7 @@ export function createActionHandlers(coreModule) {
       if (!traits) {
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.traits.noTraits"
+            "tokenActionHud.dragonbane.messages.traits.noTraits",
           ) ||
           game.i18n.localize("DoD.ui.character-sheet.noTraits") ||
           "This actor has no traits.";
@@ -85,11 +85,11 @@ export function createActionHandlers(coreModule) {
       } catch (error) {
         console.error(
           "Token Action HUD Dragonbane: Error displaying traits:",
-          error
+          error,
         );
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.traits.failed"
+            "tokenActionHud.dragonbane.messages.traits.failed",
           ) || "Failed to display traits";
         ui.notifications.error(message);
       }
@@ -108,7 +108,7 @@ export function createActionHandlers(coreModule) {
       // === ADD SPECIAL IGNORE CASES ===
       const fearTestInProgress = game.user.getFlag(
         "token-action-hud-dragonbane",
-        "fearTestInProgress"
+        "fearTestInProgress",
       );
 
       // Check if this is a Fear Test WIL roll
@@ -117,14 +117,14 @@ export function createActionHandlers(coreModule) {
         await game.user.setFlag(
           "token-action-hud-dragonbane",
           "ignoreNextRollForActionCounting",
-          true
+          true,
         );
 
         // Clear ignore flag after timeout (safety cleanup)
         setTimeout(async () => {
           await game.user.unsetFlag(
             "token-action-hud-dragonbane",
-            "ignoreNextRollForActionCounting"
+            "ignoreNextRollForActionCounting",
           );
         }, 3000);
       }
@@ -150,7 +150,7 @@ export function createActionHandlers(coreModule) {
       } catch (error) {
         console.error(
           "Token Action HUD Dragonbane: Attribute roll failed:",
-          error
+          error,
         );
         return null;
       }
@@ -163,7 +163,7 @@ export function createActionHandlers(coreModule) {
       if (actor.type === "monster") {
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.fearTest.notForMonsters"
+            "tokenActionHud.dragonbane.messages.fearTest.notForMonsters",
           ) || "Fear tests are not available for monsters";
         ui.notifications.warn(message);
         return;
@@ -181,14 +181,14 @@ export function createActionHandlers(coreModule) {
             sceneId: canvas.scene?.id,
             speaker: ChatMessage.getSpeaker({ actor: actor }),
             timestamp: Date.now(),
-          }
+          },
         );
 
         // Clear flag after 5 seconds (safety timeout)
         setTimeout(async () => {
           await game.user.unsetFlag(
             "token-action-hud-dragonbane",
-            "fearTestInProgress"
+            "fearTestInProgress",
           );
         }, 5000);
 
@@ -197,16 +197,16 @@ export function createActionHandlers(coreModule) {
       } catch (error) {
         console.error(
           "Token Action HUD Dragonbane: Error with fear test:",
-          error
+          error,
         );
         await game.user.unsetFlag(
           "token-action-hud-dragonbane",
-          "fearTestInProgress"
+          "fearTestInProgress",
         );
 
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.fearTest.failed"
+            "tokenActionHud.dragonbane.messages.fearTest.failed",
           ) || "Failed to perform fear test";
         ui.notifications.error(message);
       }
@@ -234,7 +234,7 @@ export function createActionHandlers(coreModule) {
     handleConditionToggle: async function (
       event,
       effectId,
-      attributeKey = null
+      attributeKey = null,
     ) {
       const actor = this.actor;
 
@@ -261,11 +261,11 @@ export function createActionHandlers(coreModule) {
       } catch (error) {
         console.error(
           "Token Action HUD Dragonbane: Error toggling condition:",
-          error
+          error,
         );
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.conditions.failed"
+            "tokenActionHud.dragonbane.messages.conditions.failed",
           ) || "Failed to toggle condition";
         ui.notifications.error(message);
       }
@@ -279,31 +279,151 @@ export function createActionHandlers(coreModule) {
           case "roundRest":
             await actor.restRound();
             break;
-          case "stretchRest":
-            await actor.restStretch();
+
+          case "stretchRest": {
+            const restDialogIsDefault =
+              game.settings.get("dragonbane", "restDialogIsDefault") ?? true;
+            const modifierHeld = event?.shiftKey || event?.ctrlKey || false;
+            const skipDialog = restDialogIsDefault === modifierHeld;
+
+            if (skipDialog) {
+              await actor.restStretch({ hpDice: 1, wpDice: 1, conditions: 1 });
+            } else {
+              const toPositive = (v, fallback) => {
+                const n = Number.parseInt(v, 10);
+                return Number.isFinite(n) && n >= 0 ? n : fallback;
+              };
+
+              const content =
+                await foundry.applications.handlebars.renderTemplate(
+                  "systems/dragonbane/templates/partials/stretch-rest-dialog.hbs",
+                  { hpDice: 1, wpDice: 1, conditions: 1 },
+                );
+
+              const result = await foundry.applications.api.DialogV2.wait({
+                window: {
+                  title: game.i18n.localize("DoD.ui.dialog.restStretchTitle"),
+                },
+                content,
+                position: { width: 400 },
+                buttons: [
+                  {
+                    action: "ok",
+                    icon: "fa-solid fa-check",
+                    label: game.i18n.localize("DoD.ui.dialog.restOk"),
+                    default: true,
+                    callback: (_event, button) => {
+                      const form = button.form;
+                      return {
+                        interrupted: false,
+                        hpDice: toPositive(form.elements.hpDice.value, 1),
+                        wpDice: toPositive(form.elements.wpDice.value, 1),
+                        conditions: toPositive(
+                          form.elements.conditions.value,
+                          1,
+                        ),
+                      };
+                    },
+                  },
+                  {
+                    action: "interrupted",
+                    icon: "fa-solid fa-ban",
+                    label: game.i18n.localize("DoD.ui.dialog.restInterrupt"),
+                    callback: () => ({ interrupted: true }),
+                  },
+                ],
+              });
+
+              if (!result) break; // user closed the dialog
+
+              if (result.interrupted) {
+                await actor.update({ ["system.canRestStretch"]: false });
+                ChatMessage.create({
+                  user: game.user.id,
+                  speaker: ChatMessage.getSpeaker({ actor }),
+                  flavor: game.i18n.format(
+                    "DoD.ui.character-sheet.restStretchInterrupted",
+                    { actor: actor.name },
+                  ),
+                });
+                break;
+              }
+
+              await actor.restStretch(result);
+            }
             break;
-          case "shiftRest":
-            await actor.restShift();
+          }
+
+          case "shiftRest": {
+            const restDialogIsDefault =
+              game.settings.get("dragonbane", "restDialogIsDefault") ?? true;
+            const modifierHeld = event?.shiftKey || event?.ctrlKey || false;
+            const skipDialog = restDialogIsDefault === modifierHeld;
+
+            if (skipDialog) {
+              await actor.restShift();
+            } else {
+              const result = await foundry.applications.api.DialogV2.wait({
+                window: {
+                  title: game.i18n.localize("DoD.ui.dialog.restShiftTitle"),
+                },
+                content: `<p class="notes">${game.i18n.localize("DoD.ui.dialog.restNote")}</p>`,
+                buttons: [
+                  {
+                    action: "finish",
+                    icon: "fa-solid fa-check",
+                    label: game.i18n.localize("DoD.ui.dialog.restOk"),
+                    callback: () => ({ action: "finish" }),
+                  },
+                  {
+                    action: "interrupt",
+                    icon: "fa-solid fa-ban",
+                    label: game.i18n.localize("DoD.ui.dialog.restInterrupt"),
+                    callback: () => ({ action: "interrupt" }),
+                  },
+                ],
+              });
+
+              if (!result) break; // user closed the dialog
+
+              if (result.action === "interrupt") {
+                ChatMessage.create({
+                  user: game.user.id,
+                  speaker: ChatMessage.getSpeaker({ actor }),
+                  flavor: game.i18n.format(
+                    "DoD.ui.character-sheet.restShiftInterrupted",
+                    { actor: actor.name },
+                  ),
+                });
+                break;
+              }
+
+              await actor.restShift();
+            }
             break;
+          }
+
           case "restReset":
             await actor.restReset();
             break;
-          default:
+
+          default: {
             const message =
               coreModule.api.Utils.i18n(
-                "tokenActionHud.dragonbane.messages.rest.unknownType"
+                "tokenActionHud.dragonbane.messages.rest.unknownType",
               ).replace("{restType}", restType) ||
               `Unknown rest type: ${restType}`;
             ui.notifications.warn(message);
+          }
         }
       } catch (error) {
         console.error(
           "Token Action HUD Dragonbane: Error with rest action:",
-          error
+          error,
         );
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.rest.failed"
+            "tokenActionHud.dragonbane.messages.rest.failed",
           ) || "Failed to perform rest action";
         ui.notifications.error(message);
       }
@@ -331,7 +451,7 @@ export function createActionHandlers(coreModule) {
       const restTypeName = restTypeNames[restType] || restType;
       const message =
         coreModule.api.Utils.i18n(
-          "tokenActionHud.dragonbane.messages.rest.alreadyTaken"
+          "tokenActionHud.dragonbane.messages.rest.alreadyTaken",
         )
           .replace("{actor}", actor.name)
           .replace("{restType}", restTypeName) ||
@@ -348,7 +468,7 @@ export function createActionHandlers(coreModule) {
       if (actor.type === "monster") {
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.lightTest.notForMonsters"
+            "tokenActionHud.dragonbane.messages.lightTest.notForMonsters",
           ) || "Light tests are not available for monsters";
         ui.notifications.warn(message);
         return;
@@ -364,7 +484,7 @@ export function createActionHandlers(coreModule) {
         if (!lightSourceData) {
           const message =
             coreModule.api.Utils.i18n(
-              "tokenActionHud.dragonbane.messages.lightTest.invalidSource"
+              "tokenActionHud.dragonbane.messages.lightTest.invalidSource",
             ) || "Invalid light source selected";
           ui.notifications.error(message);
           return;
@@ -374,14 +494,14 @@ export function createActionHandlers(coreModule) {
         await game.user.setFlag(
           "token-action-hud-dragonbane",
           "ignoreNextRollForActionCounting",
-          true
+          true,
         );
 
         // Clear ignore flag after timeout (safety cleanup)
         setTimeout(async () => {
           await game.user.unsetFlag(
             "token-action-hud-dragonbane",
-            "ignoreNextRollForActionCounting"
+            "ignoreNextRollForActionCounting",
           );
         }, 3000);
 
@@ -395,7 +515,7 @@ export function createActionHandlers(coreModule) {
         const messageKey = goesOut ? "lightTest.out" : "lightTest.lit";
         const message =
           coreModule.api.Utils.i18n(
-            `tokenActionHud.dragonbane.messages.${messageKey}`
+            `tokenActionHud.dragonbane.messages.${messageKey}`,
           )
             ?.replace("{actor}", actor.name)
             ?.replace("{lightSource}", lightSourceData.name) ||
@@ -415,8 +535,8 @@ export function createActionHandlers(coreModule) {
                     <div style="border: 2px solid ${
                       goesOut ? "#dc3545" : "#28a745"
                     }; padding: 10px; background: ${
-          goesOut ? "rgba(220,53,69,.1)" : "rgba(40,167,69,.1)"
-        }; margin: 5px 0;">
+                      goesOut ? "rgba(220,53,69,.1)" : "rgba(40,167,69,.1)"
+                    }; margin: 5px 0;">
                         <p style="margin: 0;">${message}</p>
                     </div>
                 `;
@@ -430,11 +550,11 @@ export function createActionHandlers(coreModule) {
       } catch (error) {
         console.error(
           "Token Action HUD Dragonbane: Error with light test:",
-          error
+          error,
         );
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.lightTest.failed"
+            "tokenActionHud.dragonbane.messages.lightTest.failed",
           ) || "Failed to perform light test";
         ui.notifications.error(message);
       }
@@ -447,7 +567,7 @@ export function createActionHandlers(coreModule) {
       if (actor.type !== "character") {
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.severeInjury.onlyForCharacters"
+            "tokenActionHud.dragonbane.messages.severeInjury.onlyForCharacters",
           ) || "Severe injury tests are only available for characters";
         ui.notifications.warn(message);
         return;
@@ -459,7 +579,7 @@ export function createActionHandlers(coreModule) {
         if (!con) {
           const message =
             coreModule.api.Utils.i18n(
-              "tokenActionHud.dragonbane.messages.severeInjury.noConAttribute"
+              "tokenActionHud.dragonbane.messages.severeInjury.noConAttribute",
             ) || "Character has no CON attribute";
           ui.notifications.error(message);
           return;
@@ -469,14 +589,14 @@ export function createActionHandlers(coreModule) {
         await game.user.setFlag(
           "token-action-hud-dragonbane",
           "ignoreNextRollForActionCounting",
-          true
+          true,
         );
 
         // Clear ignore flag after timeout (safety cleanup)
         setTimeout(async () => {
           await game.user.unsetFlag(
             "token-action-hud-dragonbane",
-            "ignoreNextRollForActionCounting"
+            "ignoreNextRollForActionCounting",
           );
         }, 5000);
 
@@ -490,7 +610,7 @@ export function createActionHandlers(coreModule) {
         const rollResult = await this.performSevereInjuryRoll(
           actor,
           boons,
-          banes
+          banes,
         );
 
         // Build enhanced chat content
@@ -498,7 +618,7 @@ export function createActionHandlers(coreModule) {
         const content = await this.buildSevereInjuryChatContent(
           actor,
           rollResult,
-          speaker
+          speaker,
         );
 
         const msg = await ChatMessage.create({
@@ -510,11 +630,11 @@ export function createActionHandlers(coreModule) {
       } catch (error) {
         console.error(
           "Token Action HUD Dragonbane: Error with severe injury test:",
-          error
+          error,
         );
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.severeInjury.failed"
+            "tokenActionHud.dragonbane.messages.severeInjury.failed",
           ) || "Failed to perform severe injury test";
         ui.notifications.error(message);
       }
@@ -528,7 +648,7 @@ export function createActionHandlers(coreModule) {
         const localizedSkillName = Utils.getLocalizedSkillName(skillKey);
 
         const skill = actor.system.coreSkills.find(
-          (s) => s.name === localizedSkillName
+          (s) => s.name === localizedSkillName,
         );
 
         if (skill) {
@@ -538,7 +658,7 @@ export function createActionHandlers(coreModule) {
         // If skill not found, show warning using the localized name
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.skills.notFound"
+            "tokenActionHud.dragonbane.messages.skills.notFound",
           )
             ?.replace("{skillName}", localizedSkillName)
             ?.replace("{actor}", actor.name) ||
@@ -547,12 +667,12 @@ export function createActionHandlers(coreModule) {
       } catch (error) {
         console.warn(
           `Token Action HUD Dragonbane: Could not perform ${skillKey} skill test`,
-          error
+          error,
         );
         const localizedSkillName = Utils.getLocalizedSkillName(skillKey);
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.skills.testFailed"
+            "tokenActionHud.dragonbane.messages.skills.testFailed",
           )?.replace("{skillName}", localizedSkillName) ||
           `Could not perform ${localizedSkillName} skill test`;
         ui.notifications.warn(message);
@@ -585,7 +705,7 @@ export function createActionHandlers(coreModule) {
       if (actor.type !== "monster") {
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.monster.attacksOnlyForMonsters"
+            "tokenActionHud.dragonbane.messages.monster.attacksOnlyForMonsters",
           ) || "Monster attacks can only be used by monsters";
         ui.notifications.warn(message);
         return;
@@ -596,7 +716,7 @@ export function createActionHandlers(coreModule) {
         : null;
       if (!attackTable) {
         ui.notifications.warn(
-          game.i18n.localize("DoD.WARNING.missingMonsterAttackTable")
+          game.i18n.localize("DoD.WARNING.missingMonsterAttackTable"),
         );
         return;
       }
@@ -614,12 +734,12 @@ export function createActionHandlers(coreModule) {
           // Specific attack
           const attackIndex = parseInt(actionId);
           tableResult = attackTable.results.find(
-            (result) => result.range[0] === attackIndex
+            (result) => result.range[0] === attackIndex,
           );
           if (!tableResult) {
             const message =
               coreModule.api.Utils.i18n(
-                "tokenActionHud.dragonbane.messages.monster.attackNotFound"
+                "tokenActionHud.dragonbane.messages.monster.attackNotFound",
               )?.replace("{attackIndex}", attackIndex) ||
               `Attack ${attackIndex} not found in table`;
             ui.notifications.warn(message);
@@ -631,7 +751,7 @@ export function createActionHandlers(coreModule) {
         const content = Utils.createMonsterAttackChatContent(
           tableResult,
           attackTable,
-          roll
+          roll,
         );
 
         await ChatMessage.create({
@@ -644,7 +764,7 @@ export function createActionHandlers(coreModule) {
         console.error("Monster attack error:", error);
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.monster.attackFailed"
+            "tokenActionHud.dragonbane.messages.monster.attackFailed",
           ) || "Failed to execute monster attack";
         ui.notifications.error(message);
       }
@@ -660,7 +780,7 @@ export function createActionHandlers(coreModule) {
       if (actor.type !== "monster") {
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.monster.defendOnlyForMonsters"
+            "tokenActionHud.dragonbane.messages.monster.defendOnlyForMonsters",
           ) || "Monster defend can only be used by monsters";
         ui.notifications.warn(message);
         return;
@@ -672,7 +792,7 @@ export function createActionHandlers(coreModule) {
         console.error("Monster defend error:", error);
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.monster.defendFailed"
+            "tokenActionHud.dragonbane.messages.monster.defendFailed",
           ) || "Failed to execute monster defend";
         ui.notifications.error(message);
       }
@@ -689,7 +809,7 @@ export function createActionHandlers(coreModule) {
       if (actor.type !== "monster") {
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.monster.weaponDamageOnlyForMonsters"
+            "tokenActionHud.dragonbane.messages.monster.weaponDamageOnlyForMonsters",
           ) || "Monster weapon damage can only be used by monsters";
         ui.notifications.warn(message);
         return;
@@ -697,9 +817,8 @@ export function createActionHandlers(coreModule) {
 
       try {
         // Import the official Dragonbane damage function
-        const { inflictDamageMessage } = await import(
-          "/systems/dragonbane/modules/chat.js"
-        );
+        const { inflictDamageMessage } =
+          await import("/systems/dragonbane/modules/chat.js");
 
         // Build damage data using official format
         const damageData = {
@@ -716,7 +835,7 @@ export function createActionHandlers(coreModule) {
         console.error("Monster weapon damage error:", error);
         const message =
           coreModule.api.Utils.i18n(
-            "tokenActionHud.dragonbane.messages.monster.weaponDamageFailed"
+            "tokenActionHud.dragonbane.messages.monster.weaponDamageFailed",
           ) || "Failed to roll weapon damage";
         ui.notifications.error(message);
       }
