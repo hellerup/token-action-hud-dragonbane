@@ -193,7 +193,7 @@ The HUD organizes into collapsible, repositionable sections:
 | **[YZE Combat](https://foundryvtt.com/packages/yze-combat)**                               | Automatic   | Single action tracking system                |
 | **[Dragonbane Status Effects](https://foundryvtt.com/packages/dragonbane-status-effects)** | Automatic   | Enhanced condition categorization (v13+)     |
 
-### **🆕 Automatic Action Exclusions (v2.4.1)**
+### **🆕 Automatic Action Exclusions**
 
 When using **Dragonbane Combat Assistant v2.2.3+**, these utility rolls are **automatically excluded** from action counting:
 
@@ -219,15 +219,7 @@ When using **Dragonbane Combat Assistant v2.2.3+**, these utility rolls are **au
 
 ### **Previous Major Updates**
 
-### **v2.4.1 - YZE Combat Integration Fixes** ⭐
-
-- **Fixed Action Counting**: Fear Tests, Light Tests, Death Rolls, Severe Injury Tests properly excluded
-- **Preserved Dialogs**: All attribute rolls maintain boons/banes selection dialogs
-- **Ignore Flag System**: Extensible API for other modules to exclude custom rolls
-- **Enhanced Integration**: Seamless compatibility with Dragonbane Combat Assistant
-
-### **Previous Major Updates**
-
+- **v2.4.1**: Auto exclusion of certain test for YZE Engine action tracking, preserved dialogs, ignore flag system, more integration with Dragonbane Combat Assistant
 - **v2.4.0**: Rally Self visibility improvements, Death Roll enhancements, Light Test dialog upgrades
 - **v2.3.3**: Right-click rules summaries, intelligent torch placement
 - **v2.3.0**: Currency display system, Severe Injury enhancements, Fear Test additions
