@@ -10,10 +10,10 @@
   ],
   "url": "https://github.com/kergalli/token-action-hud-dragonbane",
   "flags": {},
-  "version": "2.5.0",
+  "version": "2.6.0",
   "compatibility": {
     "minimum": "12.331",
-    "verified": "13.351"
+    "verified": "14.360"
   },
   "esmodules": ["./scripts/init.js"],
   "scripts": [],
@@ -55,8 +55,8 @@
         "type": "module",
         "compatibility": [
           {
-            "minimum": "2.0.0",
-            "verified": "2.0.16"
+            "minimum": "2.1.1",
+            "verified": "2.1.1"
           }
         ]
       }
@@ -80,10 +80,10 @@
     ]
   },
   "socket": false,
-  "manifest": "https://github.com/kergalli/token-action-hud-dragonbane/releases/latest/download/module.json",
-  "download": "https://github.com/kergalli/token-action-hud-dragonbane/releases/download/v2.5.0/module.zip",
-  "readme": "https://github.com/kergalli/token-action-hud-dragonbane/blob/main/README.md",
-  "changelog": "https://github.com/kergalli/token-action-hud-dragonbane/blob/main/CHANGELOG.md",
+  "manifest": "https://github.com/hellerup/token-action-hud-dragonbane/releases/latest/download/module.json",
+  "download": "https://github.com/hellerup/token-action-hud-dragonbane/releases/download/v2.6.0/module.zip",
+  "readme": "https://github.com/hellerup/token-action-hud-dragonbane/blob/main/README.md",
+  "changelog": "https://github.com/hellerup/token-action-hud-dragonbane/blob/main/CHANGELOG.md",
   "protected": false,
   "coreTranslation": false,
   "library": false
